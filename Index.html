@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSFYT CODE LIBRARY</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f0f8ff; color: #333; margin: 0; padding: 10px; display: flex; flex-direction: column; min-height: 100vh;}
+        .container { flex-grow: 1; width: 100%; max-width: 700px; margin: 0 auto; padding: 15px; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); }
+        h1 { color: #007bff; text-align: center; margin-bottom: 5px; font-size: 24px; }
+        .subtitle { text-align: center; color: #666; margin-bottom: 20px; font-size: 14px; } 
+        
+        /* Filter and Search Styles */
+        #filterContainer { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; padding: 10px; background-color: #e9ecef; border-radius: 5px; }
+        .filter-group { flex-grow: 1; min-width: 120px; }
+        input[type="text"], select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        
+        /* Code List Styles */
+        #codeList { margin-top: 10px; }
+        .code-item { 
+            background-color: #ffffff; 
+            padding: 12px 15px; 
+            margin-bottom: 8px; 
+            border-radius: 4px; 
+            border-left: 5px solid #007bff; 
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); 
+        }
+        
+        /* === NEW CSS FOR IMAGE DISPLAY === */
+        .code-image {
+            width: 100%;
+            max-height: 250px; /* Maximum height set */
+            object-fit: contain; /* Image will fit without cropping/stretching */
+            border-radius: 4px;
+            margin-bottom: 10px;
+            border: 1px solid #eee;
+            background-color: #f9f9f9;
+        }
+        /* === END NEW CSS === */
+
+        .code-name { font-weight: bold; font-size: 15px; color: #333; word-break: break-word; }
+        .code-meta { font-size: 11px; color: #888; margin-top: 5px; display: flex; flex-wrap: wrap; gap: 8px; }
+        .tag { background-color: #f8f9fa; padding: 2px 6px; border-radius: 3px; border: 1px solid #ddd; }
+        .target-tag { background-color: #d1ecf1; border-color: #bee5eb; color: #0c5460; }
+        .version-tag { background-color: #d4edda; border-color: #c3e6cb; color: #155724; }
+        
+        /* Code Value and Copy Button */
+        .code-value { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+        .value-text { font-family: monospace; font-size: 14px; color: #dc3545; word-break: break-all; margin-right: 10px; }
+        .copy-btn { background-color: #007bff; color: white; padding: 6px 10px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; transition: background-color 0.2s; }
+        .copy-btn:hover { background-color: #0056b3; }
+        
+        /* No Codes Message */
+        #codeList p { text-align: center; color: #999; margin-top: 30px; }
+        
+        /* Footer/Copyright Style */
+        .footer {
+            margin-top: 30px;
+            padding: 15px;
+            text-align: center;
+            background-color: #343a40; 
+            color: #f8f9fa; 
+            font-size: 14px;
+            border-top: 1px solid #495057;
+            width: 100%;
+        }
+        .footer a {
+            color: #ffc107; 
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 16px;
+            font-family: 'Courier New', Courier, monospace; 
+        }
+        .footer a:hover {
+            color: #e0a800;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1 style="color: #4CAF50;">SSFYT CODE LIBRARY</h1> <p class="subtitle">Search, Filter, and Copy Codes</p>
+
+    <div id="filterContainer">
+        <div class="filter-group" style="flex-basis: 100%;">
+            <label for="searchCode">Search by Name:</label>
+            <input type="text" id="searchCode" placeholder="Type to search code name..." onkeyup="applyFilters()">
+        </div>
+
+        <div class="filter-group">
+            <label for="categoryFilter">Category:</label>
+            <select id="categoryFilter" onchange="toggleGenderFilter(); applyFilters();">
+                <option value="All">All Categories</option>
+                <option value="Icon Code">Icon Code</option>
+                <option value="Sound Code">Sound Code</option>
+                <option value="Animation Code">Animation Code</option>
+                <option value="Voice Pack Code">Voice Pack Code</option>
+                <option value="Music Code">Music Code</option>
+            </select>
+        </div>
+
+        <div class="filter-group" id="genderFilterGroup" style="display:none;">
+            <label for="genderFilter">Target/Header:</label>
+            <select id="genderFilter" onchange="applyFilters()">
+                <option value="All">All Targets</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Pet">Pet (All Pets)</option>
+                <option value="Pug">Pug</option>
+                <option value="Kactus">Kactus</option>
+                <option value="Arvon">Arvon</option>
+                <option value="Fang">Fang</option>
+                <option value="Hoot">Hoot</option>
+                <option value="Finn">Finn</option>
+                <option value="Zasil">Zasil</option>
+                <option value="Flash">Flash</option>
+                <option value="Yeti">Yeti</option>
+                <option value="AgentHop">AgentHop</option>
+                <option value="SenseiTig">SenseiTig</option>
+                <option value="DrBeanie">DrBeanie</option>
+                <option value="Moony">Moony</option>
+                <option value="Dreki">Dreki</option>
+                <option value="Beaston">Beaston</option>
+                <option value="Rockie">Rockie</option>
+                <option value="MrWaggor">MrWaggor</option>
+                <option value="Falco">Falco</option>
+                <option value="Ottero">Ottero</option>
+                <option value="Robo">Robo</option>
+                <option value="SpiritFox">SpiritFox</option>
+                <option value="Shiba">Shiba</option>
+                <option value="Kitty">Kitty</option>
+                <option value="MechanicalPup">MechanicalPup</option>
+                <option value="NightPanther">NightPanther</option>
+                <option value="DetectivePanda">DetectivePanda</option>
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label for="versionFilter">OB Version:</label>
+            <select id="versionFilter" onchange="applyFilters()">
+                <option value="All">All Versions</option>
+                <option value="Unknown">Unknown / Old</option>
+            </select>
+        </div>
+    </div>
+
+
+    <div id="codeList">
+        <p>Loading codes...</p>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="https://youtube.com/@ssfyt_777?si=9JBqTAd9bgnNvT8F" target="_blank">
+        © COPYRIGHT 2025 BY SSFYT
+    </a>
+</div>
+
+
+<script>
+    // -----------------------------------------------------
+    // 🛑 1. FIREBASE CONFIGURATION (Aapki Keys)
+    // -----------------------------------------------------
+    const firebaseConfig = {
+        apiKey: "AIzaSyAQLemkHi7CZN4CWRRvkbt1dcx9uWTlvts",
+        authDomain: "craftland-helper.firebaseapp.com",
+        databaseURL: "https://craftland-helper-default-rtdb.firebaseio.com",
+        projectId: "craftland-helper",
+        storageBucket: "craftland-helper.firebasestorage.app",
+        messagingSenderId: "754062868279",
+        appId: "1:754062868279:web:ca38e323b3fb8768ace4b2"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    const codesRef = database.ref('codes');
+    const versionsRef = database.ref('versions');
+    
+    let allCodes = [];
+    let allVersions = [];
+
+    // FIX: YEH SAARI PET TARGETS KI LIST HAI JISE HUM 'PET (ALL PETS)' FILTER KE LIYE USE KARENGE.
+    const PET_TARGETS = [
+        'Pet', 'Pug', 'Kactus', 'Arvon', 'Fang', 'Hoot', 'Finn', 'Zasil', 'Flash', 
+        'Yeti', 'AgentHop', 'SenseiTig', 'DrBeanie', 'Moony', 'Dreki', 'Beaston', 
+        'Rockie', 'MrWaggor', 'Falco', 'Ottero', 'Robo', 'SpiritFox', 'Shiba', 
+        'Kitty', 'MechanicalPup', 'NightPanther', 'DetectivePanda'
+    ];
+
+    // --- 2. ELEMENTS ---
+    const codeListDiv = document.getElementById('codeList');
+    const searchCodeInput = document.getElementById('searchCode');
+    const categoryFilterSelect = document.getElementById('categoryFilter');
+    const genderFilterSelect = document.getElementById('genderFilter');
+    const versionFilterSelect = document.getElementById('versionFilter');
+    const genderFilterGroup = document.getElementById('genderFilterGroup');
+
+    // --- 3. VERSION LOADING ---
+    versionsRef.on('value', (snapshot) => {
+        allVersions = [];
+        if (snapshot.exists()) {
+            snapshot.forEach(childSnapshot => {
+                const versionValue = childSnapshot.val().version; 
+                if (versionValue) {
+                    allVersions.push(versionValue);
+                }
+            });
+        }
+        populateVersionFilter(allVersions);
+    });
+
+    function populateVersionFilter(versions) {
+        // Sort versions from newest (highest number) to oldest
+        versions.sort((a, b) => {
+            const numA = parseInt(a.replace('OB', '') || 0);
+            const numB = parseInt(b.replace('OB', '') || 0);
+            return numB - numA;
+        });
+
+        versionFilterSelect.innerHTML = '<option value="All">All Versions</option><option value="Unknown">Unknown / Old</option>';
+        versions.forEach(v => {
+            const option = document.createElement('option');
+            option.value = v;
+            option.textContent = v;
+            versionFilterSelect.appendChild(option);
+        });
+    }
+
+
+    // --- 4. DATA LOADING ---
+    codesRef.orderByChild('timestamp').on('value', (snapshot) => {
+        allCodes = [];
+        if (snapshot.exists()) {
+            const codes = snapshot.val();
+            for (let key in codes) {
+                // Ensure imageURL is included here
+                allCodes.push({ id: key, ...codes[key] }); 
+            }
+            // Sort by latest timestamp (newest codes first)
+            allCodes.sort((a, b) => b.timestamp - a.timestamp);
+        }
+        applyFilters(); // Filter codes once they are loaded
+    });
+    
+    // --- 5. CONDITIONAL FILTER TOGGLE ---
+    window.toggleGenderFilter = function() {
+        if (categoryFilterSelect.value === 'Animation Code') {
+            genderFilterGroup.style.display = 'block';
+        } else {
+            genderFilterGroup.style.display = 'none';
+            genderFilterSelect.value = 'All'; // Reset Target filter if category changes
+        }
+    }
+
+    // --- 6. APPLY FILTERING LOGIC ---
+    window.applyFilters = function() {
+        const searchValue = searchCodeInput.value.toLowerCase().trim();
+        const categoryFilterValue = categoryFilterSelect.value;
+        const genderFilterValue = genderFilterSelect.value;
+        const versionFilterValue = versionFilterSelect.value;
+
+        const filteredCodes = allCodes.filter(code => {
+            // 1. Search Filter (Search by Name)
+            if (searchValue && !code.name.toLowerCase().includes(searchValue)) {
+                return false;
+            }
+
+            // 2. Category Filter
+            if (categoryFilterValue !== 'All' && code.category !== categoryFilterValue) {
+                return false;
+            }
+
+            // 3. Version Filter
+            const codeVersion = code.version || 'Unknown';
+            if (versionFilterValue !== 'All' && codeVersion !== versionFilterValue) {
+                return false;
+            }
+
+            // 4. Target (Gender/Pet/Header) Filter - Only for Animation Code
+            if (categoryFilterValue === 'Animation Code' && genderFilterValue !== 'All') {
+                if (genderFilterValue === 'Pet') {
+                    // FIX: Agar user 'Pet' select karta hai, toh Pet_targets ki list mein dekho.
+                    if (!PET_TARGETS.includes(code.target)) {
+                        return false;
+                    }
+                } else if (code.target !== genderFilterValue) {
+                    // Agar koi specific target (Male, Pug, Kactus) select kiya hai, toh exact match dekho.
+                    return false;
+                }
+            }
+
+            return true;
+        });
+
+        displayCodes(filteredCodes);
+    }
+
+    // --- 7. DISPLAY CODES (MAIN CHANGE YAHAN HAI) ---
+    function displayCodes(codes) {
+        codeListDiv.innerHTML = '';
+        if (codes.length === 0) {
+            codeListDiv.innerHTML = '<p>⚠️ Koi code nahi mila. Filter settings badal kar dekhein.</p>';
+            return;
+        }
+
+        codes.forEach(code => {
+            const uniqueId = `copy-${code.id}`;
+            const target = code.target && code.target !== 'None' ? code.target : '';
+            const version = code.version || 'Unknown';
+            
+            let targetTag = target ? `<span class="tag target-tag">${target}</span>` : '';
+            let versionTag = `<span class="tag version-tag">${version}</span>`;
+
+            // === NAYA CODE YAHAN ADD HUA HAI ===
+            const imageHtml = code.imageURL 
+                ? `<img src="${code.imageURL}" alt="${code.name}" class="code-image">`
+                : '';
+            // === NAYA CODE END ===
+            
+            const newCodeItem = document.createElement('div');
+            newCodeItem.className = 'code-item';
+            
+            newCodeItem.innerHTML = `
+                ${imageHtml} <div class="code-name">${code.name}</div>
+                <div class="code-meta">
+                    <span class="tag">${code.category}</span>
+                    ${targetTag}
+                    ${versionTag}
+                </div>
+                <div class="code-value">
+                    <div class="value-text" id="${uniqueId}">${code.value}</div>
+                    <button class="copy-btn" onclick="copyCode('${uniqueId}', this)">Copy</button>
+                </div>
+            `;
+            
+            codeListDiv.appendChild(newCodeItem);
+        });
+    }
+    
+    // --- 8. COPY CODE FUNCTION ---
+    window.copyCode = function(codeId, buttonElement) {
+        const codeTextElement = document.getElementById(codeId);
+        const codeValue = codeTextElement.textContent;
+
+        navigator.clipboard.writeText(codeValue).then(() => {
+            const originalText = buttonElement.textContent;
+            buttonElement.textContent = 'Copied!';
+            buttonElement.style.backgroundColor = '#4CAF50';
+            
+            setTimeout(() => {
+                buttonElement.textContent = originalText;
+                buttonElement.style.backgroundColor = '#007bff'; 
+            }, 1500);
+        });
+    }
+
+    // Initial load call to display all codes
+    // applyFilters() is called after allCodes are loaded by the listener.
+</script>
+
+</body>
+</html>
